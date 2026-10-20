@@ -33,8 +33,11 @@
 <h1>MOT-01 - Replaced Motions</h1>
 <p class="subtitle">Only showing motions that changed. Click OLD (red) vs NEW (green) to compare on Jibo.</p>
 
+<div style="text-align:center;background:#ff6b6b;color:#000;padding:10px;border-radius:8px;margin:0 auto 16px;max-width:600px;font-size:14px;font-weight:bold">
+  Before using this page: open <span id="ros-link">http://&lt;jibo-ip&gt;:9090</span> in another tab and click "Enter Rosbridge" to enable ROS connection.
+</div>
 <div class="connect-bar">
-  <input id="jibo-host" type="text" placeholder="Jibo IP or hostname (e.g. 172.20.10.2 or royal-array-sprout-cotton.local)" value="172.20.10.2" />
+  <input id="jibo-host" type="text" placeholder="Jibo IP or hostname (e.g. 172.20.10.2 or royal-array-sprout-cotton.local)" value="172.20.10.2" oninput="document.getElementById('ros-link').textContent='http://'+this.value+':9090'" />
   <button onclick="connect()">Connect</button>
 </div>
 <div id="status">Enter Jibo IP and click Connect</div>
