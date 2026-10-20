@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MOT-01 - Replaced Motions</title>
+<style>
+  body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 20px; max-width: 800px; margin: 0 auto; }
+  h1 { text-align: center; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 24px; }
+  .connect-bar { text-align: center; margin: 20px 0; }
+  .connect-bar input { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #555; background: #333; color: #eee; width: 250px; text-align: center; }
+  .connect-bar button { padding: 10px 24px; font-size: 16px; border-radius: 8px; border: none; background: #ffd43b; color: #000; cursor: pointer; margin-left: 8px; }
+  .connect-bar button:hover { background: #ffe066; }
+  #status { text-align: center; margin: 10px 0; font-size: 14px; color: #888; }
+  .card { background: #2a2a2a; border-radius: 12px; padding: 20px; margin: 16px 0; }
+  .card h3 { margin-top: 0; color: #ffd43b; }
+  .card .reason { color: #888; font-size: 13px; margin-bottom: 12px; font-style: italic; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  .row label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
+  button.old { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; background: #ff6b6b; color: #000; }
+  button.old:hover { background: #ff8787; }
+  button.new { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; background: #69db7c; color: #000; }
+  button.new:hover { background: #8ce99a; }
+  .same { background: #2a2a2a; border-radius: 12px; padding: 16px; margin: 16px 0; }
+  .same h3 { margin-top: 0; color: #69db7c; }
+  .same-list { color: #aaa; font-size: 14px; line-height: 1.8; }
+  .disabled { opacity: 0.4; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<h1>MOT-01 - Replaced Motions</h1>
+<p class="subtitle">Only showing motions that changed. Click OLD (red) vs NEW (green) to compare on Jibo.</p>
+
+<div class="connect-bar">
+  <input id="jibo-host" type="text" placeholder="Jibo IP or hostname (e.g. 172.20.10.2 or royal-array-sprout-cotton.local)" value="172.20.10.2" />
+  <button onclick="connect()">Connect</button>
+</div>
+<div id="status">Enter Jibo IP and click Connect</div>
+
+<div id="buttons" class="disabled">
+
+  <div class="card">
+    <h3>Question Animation</h3>
+    <div class="reason">Question_01_02 broke Jibo's eye display. Question_04 performs the same head tilt without the eye glitch.</div>
+    <div class="row">
+      <div>
+        <label>OLD (ROS)</label>
+        <button class="old" onclick="mcp('play_motion',{name:'Question_01'})">Question_01 (breaks eye)</button>
+      </div>
+      <div>
+        <label>NEW (MCP)</label>
+        <button class="new" onclick="mcp('play_motion',{name:'Question_04'})">Question_04</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="same">
+    <h3>Thinking (Latency Mask) - Same animation, moved to MCP</h3>
+    <div class="same-list">
+      Thinking_06 - same animation via MCP play_motion<br>
+      <span style="color:#ffd43b">TBD: hmm.mp3 does not exist on this Jibo. Voice line replacement (ESML speak) to be decided in MOT-02.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Listen / VAD Animation</h3>
+    <div class="reason">eyeListen.keys only exists in the rosbridge directory, not in animDB. Listening_04 was selected from animDB as the closest match - produces a similar attentive body posture.</div>
+    <div class="row">
+      <div>
+        <label>OLD (ROS)</label>
+        <button class="old" onclick="rosMotion('eyeListen.keys')">eyeListen</button>
+      </div>
+      <div>
+        <label>RESET</label>
+        <button class="old" style="background:#555;color:#eee" onclick="mcp('play_motion',{name:'default'}); mcp('light_ring_off',{})">Clear</button>
+      </div>
+      <div>
+        <label>NEW (MCP)</label>
+        <button class="new" onclick="mcp('play_motion',{name:'Listening_04'}); setTimeout(function(){mcp('light_ring_on',{r:0,g:1,b:1})},100); setTimeout(function(){mcp('light_ring_on',{r:0,g:1,b:1})},400); setTimeout(function(){mcp('light_ring_on',{r:0,g:1,b:1})},800)">Listening_04 + Cyan LED (recommended)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Reset</h3>
+    <div class="reason">Old code had separate default.keys (eye reset) and reset.keys (body reset). MCP "default" animation covers both - it has Body, Eye, and Overlay layers. One call replaces two.</div>
+    <div class="row">
+      <div>
+        <label>OLD (ROS)</label>
+        <button class="old" onclick="rosMotion('default.keys')">default.keys</button>
+        <button class="old" onclick="rosMotion('reset.keys')">reset.keys</button>
+      </div>
+      <div>
+        <label>NEW (MCP)</label>
+        <button class="new" onclick="mcp('play_motion',{name:'default'}); mcp('light_ring_off',{})">default + LED off (full reset)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="same">
+    <h3>Unchanged Motions (exact same animation, just MCP instead of ROS)</h3>
+    <div class="same-list">
+      greetings_09 -greeting on story open<br>
+      Eye_Medium_Blink_01 -idle blink every 5s<br>
+      Body_Crouch_01 -idle pose<br>
+      Body_Lean_Left_02 -idle pose<br>
+      Body_Lean_Right_02 -idle pose<br>
+      default -eye/body reset
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/roslib@1.3.0/build/roslib.min.js"></script>
+<script>
+var mcpUrl = '';
+var rosConn = null;
+var rosTopic = null;
+var sessionId = null;
+var mcpId = 1;
+var statusEl = document.getElementById('status');
+var buttonsEl = document.getElementById('buttons');
+
+function connect() {
+  var host = document.getElementById('jibo-host').value.trim();
+  if (!host) { alert('Enter a Jibo IP or hostname'); return; }
+  mcpUrl = 'http://' + host + ':9010/mcp';
+  sessionId = null;
+  mcpId = 1;
+  statusEl.textContent = 'Connecting to ' + host + '...';
+  statusEl.style.color = '#ffd43b';
+  buttonsEl.classList.add('disabled');
+
+  // ROS
+  if (rosConn) { try { rosConn.close(); } catch(e) {} }
+  rosConn = new ROSLIB.Ros({ url: 'ws://' + host + ':9090' });
+  rosConn.on('connection', function() {
+    rosTopic = new ROSLIB.Topic({ ros: rosConn, name: '/jibo', messageType: 'jibo_msgs/JiboAction' });
+    rosTopic.advertise();
+  });
+
+  // MCP
+  fetch(mcpUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: mcpId++, method: 'initialize', params: {} })
+  }).then(function(r) {
+    sessionId = r.headers.get('Mcp-Session-Id');
+    if (sessionId) {
+      statusEl.textContent = 'Connected to ' + host;
+      statusEl.style.color = '#69db7c';
+      buttonsEl.classList.remove('disabled');
+    } else {
+      statusEl.textContent = 'Connected (no session ID)';
+      statusEl.style.color = '#ffd43b';
+      buttonsEl.classList.remove('disabled');
+    }
+  }).catch(function(e) {
+    statusEl.textContent = 'Failed to connect: ' + e.message;
+    statusEl.style.color = '#ff6b6b';
+  });
+}
+
+function rosMotion(motion) {
+  if (!rosTopic) { statusEl.textContent = 'ROS not connected - try it anyway, nothing will happen (that proves it)'; return; }
+  rosTopic.publish(new ROSLIB.Message({ do_motion: true, motion: motion }));
+  statusEl.textContent = 'ROS: played ' + motion + ' (did anything happen?)';
+}
+
+function mcp(tool, args) {
+  if (!sessionId && !mcpUrl) { alert('Not connected'); return; }
+  fetch(mcpUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Mcp-Session-Id': sessionId || '' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: mcpId++, method: 'tools/call', params: { name: tool, arguments: args } })
+  }).then(function(r) { return r.json(); }).then(function(r) {
+    var text = r.result && r.result.content && r.result.content[0] ? r.result.content[0].text : JSON.stringify(r);
+    statusEl.textContent = text;
+  }).catch(function(e) { statusEl.textContent = 'Error: ' + e.message; });
+}
+</script>
+
+</body>
+</html>
